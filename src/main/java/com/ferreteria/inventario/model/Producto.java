@@ -1,13 +1,17 @@
 package com.ferreteria.inventario.model;
 
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+
 @Entity
 @Table(name = "productos")
+
 public class Producto {
 
     @Id
@@ -66,4 +70,16 @@ public class Producto {
     public void setStock(Integer stock) {
         this.stock = stock;
     }
+
+@ManyToOne
+@JoinColumn(name = "categoria_id")
+private Categoria categoriaRelacionada;
+
+public Categoria getCategoriaRelacionada() {
+    return categoriaRelacionada;
+}
+
+public void setCategoriaRelacionada(Categoria categoriaRelacionada) {
+    this.categoriaRelacionada = categoriaRelacionada;
+}
 }

@@ -7,11 +7,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/productos")
+@RestController //
+@RequestMapping("/api/productos") //
 public class ProductoController {
 
-    private final ProductoService productoService;
+    private final ProductoService productoService; //
 
     public ProductoController(ProductoService productoService) {
         this.productoService = productoService;

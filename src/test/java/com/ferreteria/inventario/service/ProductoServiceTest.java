@@ -1,14 +1,20 @@
 package com.ferreteria.inventario.service;
 
+import com.ferreteria.inventario.model.Categoria;
 import com.ferreteria.inventario.model.Producto;
+import com.ferreteria.inventario.repository.CategoriaRepository;
 import com.ferreteria.inventario.repository.ProductoRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ProductoServiceTest {
 
@@ -17,7 +23,8 @@ class ProductoServiceTest {
 
         // Arrange
         ProductoRepository productoRepository = Mockito.mock(ProductoRepository.class);
-        ProductoService productoService = new ProductoService(productoRepository);
+        CategoriaRepository categoriaRepository = Mockito.mock(CategoriaRepository.class);
+        ProductoService productoService = new ProductoService(productoRepository, categoriaRepository);
 
         Producto producto = new Producto();
         producto.setId(1L);
@@ -42,7 +49,8 @@ class ProductoServiceTest {
 
         // Arrange
         ProductoRepository productoRepository = Mockito.mock(ProductoRepository.class);
-        ProductoService productoService = new ProductoService(productoRepository);
+        CategoriaRepository categoriaRepository = Mockito.mock(CategoriaRepository.class);
+        ProductoService productoService = new ProductoService(productoRepository, categoriaRepository);
 
         Mockito.when(productoRepository.findById(999L))
                 .thenReturn(Optional.empty());
@@ -59,7 +67,8 @@ class ProductoServiceTest {
 
         // Arrange
         ProductoRepository productoRepository = Mockito.mock(ProductoRepository.class);
-        ProductoService productoService = new ProductoService(productoRepository);
+        CategoriaRepository categoriaRepository = Mockito.mock(CategoriaRepository.class);
+        ProductoService productoService = new ProductoService(productoRepository, categoriaRepository);
 
         Producto producto1 = new Producto();
         producto1.setId(1L);
@@ -86,7 +95,8 @@ class ProductoServiceTest {
 
         // Arrange
         ProductoRepository productoRepository = Mockito.mock(ProductoRepository.class);
-        ProductoService productoService = new ProductoService(productoRepository);
+        CategoriaRepository categoriaRepository = Mockito.mock(CategoriaRepository.class);
+        ProductoService productoService = new ProductoService(productoRepository, categoriaRepository);
 
         Producto producto = new Producto();
         producto.setNombre("Taladro");
@@ -113,12 +123,40 @@ class ProductoServiceTest {
 
         // Arrange
         ProductoRepository productoRepository = Mockito.mock(ProductoRepository.class);
-        ProductoService productoService = new ProductoService(productoRepository);
+        CategoriaRepository categoriaRepository = Mockito.mock(CategoriaRepository.class);
+        ProductoService productoService = new ProductoService(productoRepository, categoriaRepository);
 
         // Act
         productoService.eliminarProducto(1L);
 
         // Assert
         Mockito.verify(productoRepository).deleteById(1L);
+    }
+
+    //Sexta prueba unitaria
+    @Test
+    void guardarProducto_debeRechazarCategoriaInexistente() {
+        //Arrange
+        ProductoRepository productoRepository = Mockito.mock(ProductoRepository.class);
+        CategoriaRepository categoriaRepository = Mockito.mock(CategoriaRepository.class);
+        ProductoService productoService = new ProductoService(productoRepository, categoriaRepository);
+
+        Categoria categoria = new Categoria();
+        categoria.setId(999L); // ID de categoría que no existe
+
+        Producto producto = new Producto();
+        producto.setNombre("Sierra");
+        producto.setCategoriaRelacionada(categoria);
+
+        Mockito.when(categoriaRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // Act
+        ResponseStatusException excepcion = assertThrows(
+            ResponseStatusException.class,() -> productoService.guardarProducto(producto)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, excepcion.getStatusCode());
+        // Assert
+        Mockito.verify(productoRepository, Mockito.never()).save(Mockito.any(Producto.class));
     }
 }
