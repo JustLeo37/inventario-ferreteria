@@ -5,6 +5,8 @@ import com.ferreteria.inventario.model.Producto;
 import com.ferreteria.inventario.service.ProductoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.ferreteria.inventario.dto.PaginaResponse;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +24,14 @@ public class ProductoController {
     @GetMapping
     public List<Producto> listarProductos() {
         return productoService.listarProductos();
+    }
+
+        @GetMapping("/paginado")
+    public PaginaResponse<Producto> listarPaginado(
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "5") int tamanio,
+            @RequestParam(defaultValue = "nombre") String ordenarPor) {
+        return productoService.listarPaginado(pagina, tamanio, ordenarPor);
     }
 
     // ---- Endpoints que usan las consultas JPQL ----
@@ -64,14 +74,14 @@ public class ProductoController {
     }
 
     @PostMapping
-    public Producto guardarProducto(@RequestBody Producto producto) {
+    public Producto guardarProducto(@Valid @RequestBody Producto producto) {
         return productoService.guardarProducto(producto);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Producto> actualizarProducto(
             @PathVariable Long id,
-            @RequestBody Producto producto) {
+            @Valid @RequestBody Producto producto) {
 
         return productoService.buscarPorId(id)
                 .map(productoExistente -> {

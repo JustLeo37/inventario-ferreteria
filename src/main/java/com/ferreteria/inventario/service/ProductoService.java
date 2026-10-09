@@ -1,5 +1,8 @@
 package com.ferreteria.inventario.service;
 
+import com.ferreteria.inventario.dto.PaginaResponse;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import com.ferreteria.inventario.dto.VentaItemRequest;
 import com.ferreteria.inventario.model.Categoria;
 import com.ferreteria.inventario.model.Producto;
@@ -30,6 +33,16 @@ public class ProductoService {
     @Transactional(readOnly = true)
     public List<Producto> listarProductos() {
         return productoRepository.findAll();
+    }
+        @Transactional(readOnly = true)
+    public PaginaResponse<Producto> listarPaginado(int pagina, int tamanio, String ordenarPor) {
+        List<String> permitidos = List.of("nombre", "precio", "stock", "marca");
+        String campo = permitidos.contains(ordenarPor) ? ordenarPor : "nombre";
+        int tam = Math.min(Math.max(tamanio, 1), 50);
+
+        var resultado = productoRepository.findAll(
+                PageRequest.of(Math.max(pagina, 0), tam, Sort.by(campo)));
+        return PaginaResponse.desde(resultado);
     }
 
     @Transactional(readOnly = true)

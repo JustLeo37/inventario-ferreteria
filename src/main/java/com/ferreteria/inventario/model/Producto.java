@@ -1,5 +1,8 @@
 package com.ferreteria.inventario.model;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Entity;
@@ -14,13 +17,25 @@ import jakarta.persistence.Table;
 
 public class Producto {
 
-    @Id
+       @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @NotBlank(message = "El nombre es obligatorio")
     private String nombre;
+
+    // Se completa automáticamente desde la categoría relacionada (ver ProductoService)
     private String categoria;
+
+    @NotBlank(message = "La marca es obligatoria")
     private String marca;
+
+    @NotNull(message = "El precio es obligatorio")
+    @PositiveOrZero(message = "El precio no puede ser negativo")
     private Double precio;
+
+    @NotNull(message = "El stock es obligatorio")
+    @PositiveOrZero(message = "El stock no puede ser negativo")
     private Integer stock;
     
 

@@ -1,11 +1,14 @@
 package com.ferreteria.inventario.repository;
 
 import com.ferreteria.inventario.model.Producto;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
@@ -24,4 +27,9 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     // Valor total del inventario (suma de precio × stock)
     @Query("SELECT COALESCE(SUM(p.precio * p.stock), 0.0) FROM Producto p")
     Double calcularValorInventario();
+
+    // Bloqueo pesimista: evita que dos ventas simultáneas descuenten el mismo stock
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Producto p WHERE p.id = :id")
+    Optional<Producto> buscarParaActualizar(@Param("id") Long id);
 }
