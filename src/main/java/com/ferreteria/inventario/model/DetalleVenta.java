@@ -43,8 +43,8 @@ public class DetalleVenta {
     public DetalleVenta(Producto producto, Integer cantidad, BigDecimal precioUnitario) {
         this.producto = producto;
         this.cantidad = cantidad;
-        this.precioUnitario = precioUnitario;
-        this.subtotal = precioUnitario.multiply(BigDecimal.valueOf(cantidad));
+        this.precioUnitario = precioUnitario.setScale(2, java.math.RoundingMode.HALF_UP);
+        this.subtotal = this.precioUnitario.multiply(BigDecimal.valueOf(cantidad));
     }
 
     public Long getId() { return id; }

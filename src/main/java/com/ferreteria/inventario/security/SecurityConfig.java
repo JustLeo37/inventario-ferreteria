@@ -32,6 +32,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/error").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 // Registrar ventas: ADMIN y USER
                 .requestMatchers(HttpMethod.POST, "/api/productos/venta", "/api/ventas").hasAnyRole("ADMIN", "USER")
