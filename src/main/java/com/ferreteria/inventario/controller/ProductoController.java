@@ -1,17 +1,21 @@
 package com.ferreteria.inventario.controller;
 
+import com.ferreteria.inventario.dto.VentaItemRequest;
 import com.ferreteria.inventario.model.Producto;
 import com.ferreteria.inventario.service.ProductoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.ferreteria.inventario.dto.PaginaResponse;
+import jakarta.validation.Valid;
 
 import java.util.List;
+import java.util.Map;
 
-@RestController //
-@RequestMapping("/api/productos") //
+@RestController
+@RequestMapping("/api/productos")
 public class ProductoController {
 
-    private final ProductoService productoService; //
+    private final ProductoService productoService;
 
     public ProductoController(ProductoService productoService) {
         this.productoService = productoService;
@@ -22,6 +26,46 @@ public class ProductoController {
         return productoService.listarProductos();
     }
 
+        @GetMapping("/paginado")
+    public PaginaResponse<Producto> listarPaginado(
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "5") int tamanio,
+            @RequestParam(defaultValue = "nombre") String ordenarPor) {
+        return productoService.listarPaginado(pagina, tamanio, ordenarPor);
+    }
+
+    // ---- Endpoints que usan las consultas JPQL ----
+
+    @GetMapping("/buscar")
+    public List<Producto> buscarPorNombre(@RequestParam String nombre) {
+        return productoService.buscarPorNombre(nombre);
+    }
+
+    @GetMapping("/categoria/{nombre}")
+    public List<Producto> buscarPorCategoria(@PathVariable String nombre) {
+        return productoService.buscarPorCategoria(nombre);
+    }
+
+    @GetMapping("/stock-bajo")
+    public List<Producto> stockBajo(@RequestParam(defaultValue = "5") Integer umbral) {
+        return productoService.listarStockBajo(umbral);
+    }
+
+    @GetMapping("/valor-inventario")
+    public Map<String, Double> valorInventario() {
+        return Map.of("valorTotal", productoService.valorTotalInventario());
+    }
+
+    // ---- Proceso transaccional ----
+
+    @PostMapping("/venta")
+    public Map<String, Object> registrarVenta(@RequestBody List<VentaItemRequest> items) {
+        double total = productoService.registrarVenta(items);
+        return Map.of("mensaje", "Venta registrada correctamente", "total", total);
+    }
+
+    // ---- CRUD ----
+
     @GetMapping("/{id}")
     public ResponseEntity<Producto> buscarPorId(@PathVariable Long id) {
         return productoService.buscarPorId(id)
@@ -30,14 +74,14 @@ public class ProductoController {
     }
 
     @PostMapping
-    public Producto guardarProducto(@RequestBody Producto producto) {
+    public Producto guardarProducto(@Valid @RequestBody Producto producto) {
         return productoService.guardarProducto(producto);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Producto> actualizarProducto(
             @PathVariable Long id,
-            @RequestBody Producto producto) {
+            @Valid @RequestBody Producto producto) {
 
         return productoService.buscarPorId(id)
                 .map(productoExistente -> {
@@ -47,6 +91,9 @@ public class ProductoController {
                     productoExistente.setMarca(producto.getMarca());
                     productoExistente.setPrecio(producto.getPrecio());
                     productoExistente.setStock(producto.getStock());
+                    if (producto.getCategoriaRelacionada() != null) {
+                        productoExistente.setCategoriaRelacionada(producto.getCategoriaRelacionada());
+                    }
 
                     return ResponseEntity.ok(
                             productoService.guardarProducto(productoExistente)
