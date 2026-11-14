@@ -32,7 +32,7 @@ public class ProductoService {
 
     @Transactional(readOnly = true)
     public List<Producto> listarProductos() {
-        return productoRepository.findAll();
+        return productoRepository.findByActivoTrue();
     }
         @Transactional(readOnly = true)
     public PaginaResponse<Producto> listarPaginado(int pagina, int tamanio, String ordenarPor) {
@@ -40,14 +40,14 @@ public class ProductoService {
         String campo = permitidos.contains(ordenarPor) ? ordenarPor : "nombre";
         int tam = Math.min(Math.max(tamanio, 1), 50);
 
-        var resultado = productoRepository.findAll(
+        var resultado = productoRepository.findByActivoTrue(
                 PageRequest.of(Math.max(pagina, 0), tam, Sort.by(campo)));
         return PaginaResponse.desde(resultado);
     }
 
     @Transactional(readOnly = true)
     public Optional<Producto> buscarPorId(Long id) {
-        return productoRepository.findById(id);
+        return productoRepository.findByIdAndActivoTrue(id);
     }
 
     @Transactional(readOnly = true)
@@ -99,10 +99,20 @@ public class ProductoService {
         return productoRepository.save(producto);
     }
 
-    @Transactional
-    public void eliminarProducto(Long id) {
-        productoRepository.deleteById(id);
-    }
+
+  
+
+ @Transactional
+ public void eliminarProducto(Long id) {
+    Producto producto = productoRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "No existe el producto con id " + id));
+
+    producto.setActivo(false);
+    productoRepository.save(producto);
+ }
+
+
 
     /**
      * Registra una venta con varios productos. Si UN solo ítem falla
@@ -128,6 +138,14 @@ public class ProductoService {
             Producto producto = productoRepository.findById(item.productoId())
                     .orElseThrow(() -> new ResponseStatusException(
                             HttpStatus.NOT_FOUND, "No existe el producto con id " + item.productoId()));
+
+                            
+                   if (!producto.isActivo()) {
+                        throw new ResponseStatusException(HttpStatus.CONFLICT,
+                           "El producto '" + producto.getNombre()
+                             + "' está desactivado y no se puede vender");
+                    }
+
 
             int disponible = producto.getStock() == null ? 0 : producto.getStock();
 

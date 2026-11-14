@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 
 
 @Entity
@@ -37,6 +38,9 @@ public class Producto {
     @NotNull(message = "El stock es obligatorio")
     @PositiveOrZero(message = "El stock no puede ser negativo")
     private Integer stock;
+
+    @Column(nullable = false, columnDefinition = "boolean default true")
+     private Boolean activo = true;
     
 
     public Long getId() {
@@ -85,6 +89,20 @@ public class Producto {
     public void setStock(Integer stock) {
         this.stock = stock;
     }
+
+    
+    public Boolean getActivo() {
+    return activo;
+    }
+
+    public void setActivo(Boolean activo) {
+    this.activo = activo;
+    }
+
+    public boolean isActivo() {
+    return !Boolean.FALSE.equals(activo);
+    }
+
 
 @ManyToOne
 @JoinColumn(name = "categoria_id")

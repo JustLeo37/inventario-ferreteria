@@ -1,5 +1,6 @@
 package com.ferreteria.inventario.service;
 
+import com.ferreteria.inventario.dto.VentaItemRequest;
 import com.ferreteria.inventario.model.Categoria;
 import com.ferreteria.inventario.model.Producto;
 import com.ferreteria.inventario.repository.CategoriaRepository;
@@ -34,7 +35,7 @@ class ProductoServiceTest {
         producto.setPrecio(25.50);
         producto.setStock(10);
 
-        Mockito.when(productoRepository.findById(1L))
+        Mockito.when(productoRepository.findByIdAndActivoTrue(1L))
                 .thenReturn(Optional.of(producto));
 
         // Act
@@ -52,7 +53,7 @@ class ProductoServiceTest {
         CategoriaRepository categoriaRepository = Mockito.mock(CategoriaRepository.class);
         ProductoService productoService = new ProductoService(productoRepository, categoriaRepository);
 
-        Mockito.when(productoRepository.findById(999L))
+        Mockito.when(productoRepository.findByIdAndActivoTrue(999L))
                 .thenReturn(Optional.empty());
 
         // Act
@@ -78,7 +79,7 @@ class ProductoServiceTest {
         producto2.setId(2L);
         producto2.setNombre("Destornillador");
 
-        Mockito.when(productoRepository.findAll())
+        Mockito.when(productoRepository.findByActivoTrue())
                 .thenReturn(List.of(producto1, producto2));
 
         // Act
@@ -118,20 +119,27 @@ class ProductoServiceTest {
         assertEquals(5, resultado.getStock());
     }
 
-    @Test
-    void eliminarProducto_debeEliminarProductoPorId() { //Prueba 5
+   @Test
+void eliminarProducto_debeDesactivarSinBorrarFisicamente() { // Prueba 5
 
-        // Arrange
-        ProductoRepository productoRepository = Mockito.mock(ProductoRepository.class);
-        CategoriaRepository categoriaRepository = Mockito.mock(CategoriaRepository.class);
-        ProductoService productoService = new ProductoService(productoRepository, categoriaRepository);
+    // Arrange
+    ProductoRepository productoRepository = Mockito.mock(ProductoRepository.class);
+    CategoriaRepository categoriaRepository = Mockito.mock(CategoriaRepository.class);
+    ProductoService productoService = new ProductoService(productoRepository, categoriaRepository);
 
-        // Act
-        productoService.eliminarProducto(1L);
+    Producto producto = new Producto();
+    producto.setActivo(true);
+    Mockito.when(productoRepository.findById(3L)).thenReturn(Optional.of(producto));
 
-        // Assert
-        Mockito.verify(productoRepository).deleteById(1L);
-    }
+    // Act
+    productoService.eliminarProducto(3L);
+
+    // Assert
+    assertEquals(false, producto.getActivo());
+    Mockito.verify(productoRepository).save(producto);
+    Mockito.verify(productoRepository, Mockito.never()).deleteById(Mockito.anyLong());
+}
+
 
     //Sexta prueba unitaria
     @Test
@@ -159,4 +167,29 @@ class ProductoServiceTest {
         // Assert
         Mockito.verify(productoRepository, Mockito.never()).save(Mockito.any(Producto.class));
     }
+
+    @Test
+void registrarVenta_debeRechazarProductoDesactivado() { // Prueba 7
+
+    // Arrange
+    ProductoRepository productoRepository = Mockito.mock(ProductoRepository.class);
+    CategoriaRepository categoriaRepository = Mockito.mock(CategoriaRepository.class);
+    ProductoService productoService = new ProductoService(productoRepository, categoriaRepository);
+
+    Producto producto = new Producto();
+    producto.setNombre("Martillo");
+    producto.setStock(10);
+    producto.setActivo(false);
+    Mockito.when(productoRepository.findById(5L)).thenReturn(Optional.of(producto));
+
+    // Act + Assert
+    org.springframework.web.server.ResponseStatusException error =
+            assertThrows(org.springframework.web.server.ResponseStatusException.class,
+                    () -> productoService.registrarVenta(
+                            List.of(new VentaItemRequest(5L, 1))));
+
+    assertEquals(409, error.getStatusCode().value());
+    assertEquals(10, producto.getStock());
+}
+
 }
