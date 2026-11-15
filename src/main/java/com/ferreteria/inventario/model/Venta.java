@@ -1,5 +1,9 @@
 package com.ferreteria.inventario.model;
 
+import jakarta.persistence.EntityListeners;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,6 +20,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "ventas")
+@EntityListeners(AuditingEntityListener.class)
 public class Venta {
 
     @Id
@@ -54,4 +59,22 @@ public class Venta {
     public void setTotal(BigDecimal total) { this.total = total; }
 
     public List<DetalleVenta> getDetalles() { return detalles; }
+
+// Auditoría: usuario que creó el registro de venta
+@CreatedBy
+@Column(name = "created_by", updatable = false, length = 50)
+private String createdBy;
+
+// Auditoría: fecha y hora de creación del registro
+@CreatedDate
+@Column(name = "created_date", updatable = false)
+private LocalDateTime createdDate;
+
+public String getCreatedBy() {
+    return createdBy;
+}
+
+public LocalDateTime getCreatedDate() {
+    return createdDate;
+}
 }
