@@ -79,6 +79,19 @@ La API queda en `http://localhost:8080`. Al primer arranque se crean dos usuario
 
 Sin token responde **401**; con un token de rol insuficiente responde **403**.
 
+## Documentación de la API (Swagger / OpenAPI 3)
+
+- Swagger UI: http://localhost:8080/swagger-ui.html
+- Especificación OpenAPI (JSON): http://localhost:8080/v3/api-docs
+
+Para probar los endpoints protegidos desde Swagger:
+
+1. Ejecutar `POST /api/auth/login` (por ejemplo `{"username": "admin", "password": "admin123"}`).
+2. Copiar el valor de `token` de la respuesta.
+3. Pulsar **Authorize**, pegar solo el token (sin la palabra `Bearer`) y confirmar.
+
+Cada endpoint indica su descripción, el rol requerido, ejemplos de petición y los códigos de respuesta posibles.
+
 ## Endpoints principales
 
 | Método | Ruta | Descripción |
