@@ -1,5 +1,10 @@
 package com.ferreteria.inventario.model;
 
+import jakarta.persistence.EntityListeners;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import java.time.LocalDateTime;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -10,10 +15,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 
 
 @Entity
 @Table(name = "productos")
+@EntityListeners(AuditingEntityListener.class)
 
 public class Producto {
 
@@ -37,6 +44,9 @@ public class Producto {
     @NotNull(message = "El stock es obligatorio")
     @PositiveOrZero(message = "El stock no puede ser negativo")
     private Integer stock;
+
+    @Column(nullable = false, columnDefinition = "boolean default true")
+     private Boolean activo = true;
     
 
     public Long getId() {
@@ -86,6 +96,20 @@ public class Producto {
         this.stock = stock;
     }
 
+    
+    public Boolean getActivo() {
+    return activo;
+    }
+
+    public void setActivo(Boolean activo) {
+    this.activo = activo;
+    }
+
+    public boolean isActivo() {
+    return !Boolean.FALSE.equals(activo);
+    }
+
+
 @ManyToOne
 @JoinColumn(name = "categoria_id")
 private Categoria categoriaRelacionada;
@@ -96,5 +120,23 @@ public Categoria getCategoriaRelacionada() {
 
 public void setCategoriaRelacionada(Categoria categoriaRelacionada) {
     this.categoriaRelacionada = categoriaRelacionada;
+}
+
+// Auditoría: usuario que creó el producto
+@CreatedBy
+@Column(name = "created_by", updatable = false, length = 50)
+private String createdBy;
+
+// Auditoría: fecha y hora de creación
+@CreatedDate
+@Column(name = "created_date", updatable = false)
+private LocalDateTime createdDate;
+
+public String getCreatedBy() {
+    return createdBy;
+}
+
+public LocalDateTime getCreatedDate() {
+    return createdDate;
 }
 }

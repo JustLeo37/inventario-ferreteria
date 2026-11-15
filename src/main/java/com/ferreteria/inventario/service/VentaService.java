@@ -60,6 +60,12 @@ public class VentaService {
             Producto producto = productoRepository.buscarParaActualizar(item.productoId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                             "No existe el producto con id " + item.productoId()));
+                        
+                        if (!producto.isActivo()) {
+                            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                                "El producto '" + producto.getNombre()
+                                 + "' está desactivado y no se puede vender");
+                                    }
 
             int disponible = producto.getStock() == null ? 0 : producto.getStock();
             if (disponible < item.cantidad()) {
