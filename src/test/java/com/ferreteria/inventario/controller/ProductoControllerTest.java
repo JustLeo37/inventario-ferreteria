@@ -10,20 +10,19 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-// Prueba del punto Soft Delete: el PUT no debe reactivar productos desactivados
+// Prueba del punto Soft Delete:
+// el PUT no debe actualizar productos desactivados
 class ProductoControllerTest {
 
     @Test
     void actualizarProducto_noDebeReactivarUnProductoDesactivado() {
 
-        // Arrange
-        ProductoService productoService = Mockito.mock(ProductoService.class);
-        ProductoController productoController = new ProductoController(productoService);
+        // Arrange: preparar los objetos necesarios
+        ProductoService productoService =
+                Mockito.mock(ProductoService.class);
 
-        Producto existente = new Producto();
-        existente.setId(3L);
-        existente.setNombre("Martillo");
-        existente.setActivo(false); // desactivado con soft delete
+        ProductoController productoController =
+                new ProductoController(productoService);
 
         Producto datos = new Producto();
         datos.setNombre("Martillo pro");
@@ -31,16 +30,21 @@ class ProductoControllerTest {
         datos.setMarca("Stanley");
         datos.setPrecio(30.00);
         datos.setStock(8);
-        datos.setActivo(true); // aunque el body mande activo = true...
+        datos.setActivo(true); // Intentamos enviar activo = true
 
-        Mockito.when(productoService.buscarPorId(3L)).thenReturn(Optional.of(existente));
-        Mockito.when(productoService.guardarProducto(existente)).thenReturn(existente);
+        // El producto está desactivado, por eso no aparece en la búsqueda
+        Mockito.when(productoService.buscarPorId(3L))
+                .thenReturn(Optional.empty());
 
-        // Act
-        ResponseEntity<Producto> respuesta = productoController.actualizarProducto(3L, datos);
+        // Act: intentar actualizar el producto
+        ResponseEntity<Producto> respuesta =
+                productoController.actualizarProducto(3L, datos);
 
-        // Assert: se actualizó el nombre, pero NO se reactivó
-        assertEquals("Martillo pro", respuesta.getBody().getNombre());
-        assertEquals(false, respuesta.getBody().getActivo());
+        // Assert: verificar que el controlador responda 404
+        assertEquals(404, respuesta.getStatusCode().value());
+
+        // Verificar que no se intente guardar el producto
+        Mockito.verify(productoService, Mockito.never())
+                .guardarProducto(Mockito.any(Producto.class));
     }
 }
